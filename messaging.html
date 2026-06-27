@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>REIS · Messages</title>
+<style>
+  /* ----------------------------------------------------------------------
+     Design tokens — REIS aesthetic: typographic, restrained, dark-capable.
+     Single source of truth for color/space/type. Light + dark via prefers.
+  ---------------------------------------------------------------------- */
+  :root {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --bg:        #fafafa;
+    --surface:   #ffffff;
+    --surface-2: #f2f2f3;
+    --border:    #e3e3e6;
+    --text:      #1a1a1c;
+    --text-dim:  #6b6b72;
+    --accent:    #1a1a1c;
+    --accent-fg: #ffffff;
+    --danger:    #b42318;
+    --focus:     #2563eb;
+
+    --radius: 10px;
+    --gap: 16px;
+    --maxw: 720px;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:        #0d0d0f;
+      --surface:   #161618;
+      --surface-2: #1f1f23;
+      --border:    #2a2a2f;
+      --text:      #f2f2f3;
+      --text-dim:  #9a9aa2;
+      --accent:    #f2f2f3;
+      --accent-fg: #0d0d0f;
+      --danger:    #f87171;
+      --focus:     #60a5fa;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+  }
+
+  .app {
+    width: 100%;
+    max-width: var(--maxw);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+
+  /* ---- Header ---------------------------------------------------------- */
+  .app__header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .app__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .app__subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: .04em;
+  }
+
+  /* ---- Status banner --------------------------------------------------- */
+  .status {
+    margin: 0;
+    padding: 10px 24px;
+    font-size: 13px;
+    background: var(--surface-2);
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+  }
+  .status[data-tone="error"] { color: var(--danger); }
+  .status[hidden] { display: none; }
+
+  /* ---- Message log ----------------------------------------------------- */
+  .log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap);
+  }
+
+  .empty {
+    margin: auto;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    max-width: 36ch;
+  }
+
+  .msg {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: rise .18s ease-out;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+  @media (prefers-reduced-motion: reduce) { .msg { animation: none; } }
+
+  .msg__meta {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .msg__author { font-weight: 600; color: var(--text); }
+  .msg__time   { color: var(--text-dim); }
+
+  .msg__body {
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    white-space: pre-wrap;       /* preserve newlines, wrap long lines */
+    overflow-wrap: anywhere;
+    font-size: 14px;
+  }
+
+  /* ---- Composer -------------------------------------------------------- */
+  .composer {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--surface);
+  }
+  .composer__input {
+    flex: 1;
+    resize: none;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    min-height: 44px;
+    max-height: 160px;
+    line-height: 1.45;
+  }
+  .composer__input::placeholder { color: var(--text-dim); }
+
+  .btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: var(--radius);
+    padding: 0 18px;
+    height: 44px;
+    cursor: pointer;
+    transition: opacity .12s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ---- Focus visibility (accessibility) -------------------------------- */
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 0 16px 10px;
+    margin: -4px 0 0;
+  }
+</style>
+</head>
+<body>
+  <main class="app" aria-label="Messages">
+    <header class="app__header">
+      <div>
+        <h1 class="app__title">Messages</h1>
+        <p class="app__subtitle">Project feedback &amp; discussion</p>
+      </div>
+    </header>
+
+    <p class="status" id="status" role="status" hidden></p>
+
+    <!-- aria-live=polite: new messages announced to screen readers without stealing focus -->
+    <section class="log" id="log" role="log" aria-live="polite" aria-label="Message history" tabindex="0"></section>
+
+    <form class="composer" id="composer" autocomplete="off">
+      <label for="input" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Write a message</label>
+      <textarea
+        id="input"
+        class="composer__input"
+        placeholder="Write a message…  (Enter to send, Shift+Enter for newline)"
+        rows="1"
+        aria-describedby="hint"></textarea>
+      <button type="submit" class="btn" id="send" disabled>Send</button>
+    </form>
+    <p class="hint" id="hint">Enter to send · Shift+Enter for a new line</p>
+  </main>
+
+<script>
+"use strict";
+/* ======================================================================
+   REIS Messaging Module — v1 (must-have core)
+   Single-file, zero-dependency. Layered IIFE: Store · Model · Render · Controller.
+   Security note: user content is rendered with textContent ONLY (see Render).
+   ====================================================================== */
+(function () {
+
+  /* --------------------------------------------------------------------
+     Store — the ONLY code that touches persistence.
+     Swap localStorage for a backend later by reimplementing these three
+     functions against the same (sync) interface.
+  -------------------------------------------------------------------- */
+  const Store = (() => {
+    const KEY = "reis.messages.v1";
+    const SCHEMA_VERSION = 1;
+
+    function emptyState() {
+      return { schemaVersion: SCHEMA_VERSION, messages: [] };
+    }
+
+    function isValidMessage(m) {
+      return m && typeof m.id === "string"
+        && typeof m.author === "string"
+        && typeof m.body === "string"
+        && typeof m.createdAt === "number";
+    }
+
+    function load() {
+      let raw;
+      try {
+        raw = localStorage.getItem(KEY);
+      } catch {
+        // Storage unavailable (private mode / disabled). Run in-memory.
+        return { state: emptyState(), warning: "Storage unavailable — messages won't persist." };
+      }
+      if (!raw) return { state: emptyState(), warning: null };
+
+      try {
+        const parsed = JSON.parse(raw);
+        const messages = Array.isArray(parsed?.messages)
+          ? parsed.messages.filter(isValidMessage)
+          : [];
+        return { state: { schemaVersion: SCHEMA_VERSION, messages }, warning: null };
+      } catch {
+        // Corrupt data: never silently wipe. Start clean but warn loudly.
+        return { state: emptyState(), warning: "Saved messages were unreadable and could not be loaded." };
+      }
+    }
+
+    function save(state) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+        return { ok: true };
+      } catch {
+        return { ok: false, error: "Could not save — storage is full or unavailable." };
+      }
+    }
+
+    return { load, save, emptyState };
+  })();
+
+  /* --------------------------------------------------------------------
+     Model — pure functions. No DOM, no storage. Easy to test in isolation.
+  -------------------------------------------------------------------- */
+  const Model = (() => {
+    const MAX_LEN = 4000;
+
+    function validateBody(raw) {
+      const body = String(raw ?? "").trim();
+      if (!body) return { ok: false, reason: "empty" };
+      if (body.length > MAX_LEN) return { ok: false, reason: "too-long" };
+      return { ok: true, body };
+    }
+
+    function createMessage(body, author) {
+      return {
+        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        author: author || "You",
+        body,
+        createdAt: Date.now(),
+        editedAt: null,
+        replyTo: null,
+      };
+    }
+
+    return { validateBody, createMessage, MAX_LEN };
+  })();
+
+  /* --------------------------------------------------------------------
+     Render — the ONLY code that writes to the message log.
+     Uses textContent exclusively for user data => XSS is structurally
+     impossible, not merely "remembered."
+  -------------------------------------------------------------------- */
+  const Render = (() => {
+    const logEl = document.getElementById("log");
+    const statusEl = document.getElementById("status");
+
+    function relativeTime(ts) {
+      const diff = Date.now() - ts;
+      const s = Math.floor(diff / 1000);
+      if (s < 5) return "just now";
+      if (s < 60) return s + "s ago";
+      const m = Math.floor(s / 60);
+      if (m < 60) return m + "m ago";
+      const h = Math.floor(m / 60);
+      if (h < 24) return h + "h ago";
+      const d = Math.floor(h / 24);
+      if (d < 7) return d + "d ago";
+      return new Date(ts).toLocaleDateString();
+    }
+
+    function renderMessage(m) {
+      const wrap = document.createElement("article");
+      wrap.className = "msg";
+      wrap.dataset.id = m.id;
+
+      const meta = document.createElement("div");
+      meta.className = "msg__meta";
+
+      const author = document.createElement("span");
+      author.className = "msg__author";
+      author.textContent = m.author;            // safe
+
+      const time = document.createElement("time");
+      time.className = "msg__time";
+      time.dateTime = new Date(m.createdAt).toISOString();
+      time.textContent = relativeTime(m.createdAt);
+      time.title = new Date(m.createdAt).toLocaleString();
+
+      meta.append(author, time);
+
+      const body = document.createElement("p");
+      body.className = "msg__body";
+      body.textContent = m.body;                 // safe: never parsed as HTML
+
+      wrap.append(meta, body);
+      return wrap;
+    }
+
+    function renderLog(messages) {
+      logEl.replaceChildren();                   // full re-render: no state/DOM desync
+      if (!messages.length) {
+        const empty = document.createElement("p");
+        empty.className = "empty";
+        empty.textContent = "No messages yet. Start the conversation below.";
+        logEl.append(empty);
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      for (const m of messages) frag.append(renderMessage(m));
+      logEl.append(frag);
+      logEl.scrollTop = logEl.scrollHeight;      // keep newest in view
+    }
+
+    function setStatus(text, tone) {
+      if (!text) { statusEl.hidden = true; statusEl.textContent = ""; return; }
+      statusEl.hidden = false;
+      statusEl.textContent = text;
+      statusEl.dataset.tone = tone || "info";
+    }
+
+    return { renderLog, setStatus };
+  })();
+
+  /* --------------------------------------------------------------------
+     Controller — wires events -> Model -> Store -> Render.
+  -------------------------------------------------------------------- */
+  const Controller = (() => {
+    const form = document.getElementById("composer");
+    const input = document.getElementById("input");
+    const sendBtn = document.getElementById("send");
+
+    let state = Store.emptyState();
+
+    function persist() {
+      const res = Store.save(state);
+      if (!res.ok) Render.setStatus(res.error, "error");
+    }
+
+    function autosize() {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 160) + "px";
+    }
+
+    function refreshSendState() {
+      sendBtn.disabled = input.value.trim().length === 0;
+    }
+
+    function handleSend() {
+      const check = Model.validateBody(input.value);
+      if (!check.ok) {
+        if (check.reason === "too-long") {
+          Render.setStatus("Message is too long (max " + Model.MAX_LEN + " characters).", "error");
+        }
+        return;
+      }
+      state.messages.push(Model.createMessage(check.body));
+      persist();
+      Render.renderLog(state.messages);
+      Render.setStatus(null);
+
+      input.value = "";
+      autosize();
+      refreshSendState();
+      input.focus();                             // keep focus for rapid typing
+    }
+
+    function handleKeydown(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    }
+
+    function init() {
+      const loaded = Store.load();
+      state = loaded.state;
+      if (loaded.warning) Render.setStatus(loaded.warning, "error");
+
+      Render.renderLog(state.messages);
+
+      form.addEventListener("submit", (e) => { e.preventDefault(); handleSend(); });
+      input.addEventListener("keydown", handleKeydown);
+      input.addEventListener("input", () => { autosize(); refreshSendState(); });
+
+      refreshSendState();
+      input.focus();
+    }
+
+    return { init };
+  })();
+
+  Controller.init();
+})();
+</script>
+</body>
+</html>
