@@ -416,10 +416,10 @@
       return messages.map((m) => m.id === id ? { ...m, body: newBody, editedAt: Date.now() } : m);
     }
     function deleteMessage(messages, id) {
-      // Remove the message; surviving replies to it are re-pointed to null.
-      return messages
-        .filter((m) => m.id !== id)
-        .map((m) => m.replyTo === id ? { ...m, replyTo: null } : m);
+      // Remove the message but KEEP replyTo on its children, so orphaned
+      // replies render "In reply to a deleted message" rather than silently
+      // losing the fact that they were a reply.
+      return messages.filter((m) => m.id !== id);
     }
     const findById = (messages, id) => messages.find((m) => m.id === id) || null;
 
