@@ -48,7 +48,6 @@
   }
 
   * { box-sizing: border-box; }
-
   html, body { height: 100%; }
 
   body {
@@ -78,9 +77,10 @@
     padding: 20px 24px 16px;
     border-bottom: 1px solid var(--border);
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
+    flex-wrap: wrap;
   }
   .app__title {
     margin: 0;
@@ -94,6 +94,35 @@
     font-size: 12px;
     color: var(--text-dim);
     letter-spacing: .04em;
+  }
+  .toolbar { display: flex; gap: 8px; }
+
+  /* ---- Buttons --------------------------------------------------------- */
+  .btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: var(--radius);
+    padding: 0 18px;
+    height: 44px;
+    cursor: pointer;
+    transition: opacity .12s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: .88; }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--border);
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
   }
 
   /* ---- Status banner --------------------------------------------------- */
@@ -143,6 +172,17 @@
   }
   .msg__author { font-weight: 600; color: var(--text); }
   .msg__time   { color: var(--text-dim); }
+  .msg__edited { color: var(--text-dim); font-style: italic; }
+
+  /* Reply reference shown above a message body */
+  .msg__replyref {
+    font-size: 12px;
+    color: var(--text-dim);
+    border-left: 2px solid var(--border);
+    padding: 2px 0 2px 10px;
+    margin-bottom: 2px;
+  }
+  .msg__replyref b { color: var(--text); font-weight: 600; }
 
   .msg__body {
     margin: 0;
@@ -150,19 +190,68 @@
     background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    white-space: pre-wrap;       /* preserve newlines, wrap long lines */
+    white-space: pre-wrap;
     overflow-wrap: anywhere;
     font-size: 14px;
   }
 
+  /* Per-message actions, revealed on hover/focus-within */
+  .msg__actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 2px;
+    opacity: 0;
+    transition: opacity .12s ease;
+  }
+  .msg:hover .msg__actions,
+  .msg:focus-within .msg__actions { opacity: 1; }
+  @media (hover: none) { .msg__actions { opacity: 1; } }
+
+  .msg__action {
+    font: inherit;
+    font-size: 12px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .msg__action:hover { color: var(--text); background: var(--surface-2); }
+  .msg__action--danger:hover { color: var(--danger); }
+
+  /* Inline edit form */
+  .edit { display: flex; flex-direction: column; gap: 8px; }
+  .edit__input {
+    font: inherit; font-size: 14px;
+    color: var(--text); background: var(--surface-2);
+    border: 1px solid var(--focus); border-radius: var(--radius);
+    padding: 10px 12px; resize: vertical; min-height: 60px; line-height: 1.45;
+  }
+  .edit__actions { display: flex; gap: 8px; }
+
   /* ---- Composer -------------------------------------------------------- */
+  .composer-wrap { border-top: 1px solid var(--border); background: var(--surface); }
+
+  /* "Replying to" chip above the composer */
+  .replying {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 8px 16px; font-size: 12px; color: var(--text-dim);
+    background: var(--surface-2); border-bottom: 1px solid var(--border);
+  }
+  .replying b { color: var(--text); font-weight: 600; }
+  .replying[hidden] { display: none; }
+  .replying__cancel {
+    font: inherit; font-size: 12px; background: none; border: none;
+    color: var(--text-dim); cursor: pointer; text-decoration: underline;
+  }
+  .replying__cancel:hover { color: var(--text); }
+
   .composer {
-    border-top: 1px solid var(--border);
     padding: 14px 16px;
     display: flex;
     gap: 10px;
     align-items: flex-end;
-    background: var(--surface);
   }
   .composer__input {
     flex: 1;
@@ -180,34 +269,13 @@
   }
   .composer__input::placeholder { color: var(--text-dim); }
 
-  .btn {
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    border: 1px solid var(--accent);
-    background: var(--accent);
-    color: var(--accent-fg);
-    border-radius: var(--radius);
-    padding: 0 18px;
-    height: 44px;
-    cursor: pointer;
-    transition: opacity .12s ease;
-    white-space: nowrap;
-  }
-  .btn:hover { opacity: .88; }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-  /* ---- Focus visibility (accessibility) -------------------------------- */
-  :focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 2px;
-  }
+  .hint { font-size: 11px; color: var(--text-dim); padding: 0 16px 10px; margin: -4px 0 0; }
 
-  .hint {
-    font-size: 11px;
-    color: var(--text-dim);
-    padding: 0 16px 10px;
-    margin: -4px 0 0;
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
   }
 </style>
 </head>
@@ -218,30 +286,40 @@
         <h1 class="app__title">Messages</h1>
         <p class="app__subtitle">Project feedback &amp; discussion</p>
       </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn--ghost" id="export">Export</button>
+        <button type="button" class="btn btn--ghost" id="import">Import</button>
+        <input type="file" id="importFile" accept="application/json,.json" class="sr-only" aria-hidden="true" tabindex="-1" />
+      </div>
     </header>
 
     <p class="status" id="status" role="status" hidden></p>
 
-    <!-- aria-live=polite: new messages announced to screen readers without stealing focus -->
     <section class="log" id="log" role="log" aria-live="polite" aria-label="Message history" tabindex="0"></section>
 
-    <form class="composer" id="composer" autocomplete="off">
-      <label for="input" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Write a message</label>
-      <textarea
-        id="input"
-        class="composer__input"
-        placeholder="Write a message…  (Enter to send, Shift+Enter for newline)"
-        rows="1"
-        aria-describedby="hint"></textarea>
-      <button type="submit" class="btn" id="send" disabled>Send</button>
-    </form>
-    <p class="hint" id="hint">Enter to send · Shift+Enter for a new line</p>
+    <div class="composer-wrap">
+      <div class="replying" id="replying" hidden>
+        <span id="replyingLabel"></span>
+        <button type="button" class="replying__cancel" id="replyingCancel">Cancel reply</button>
+      </div>
+      <form class="composer" id="composer" autocomplete="off">
+        <label for="input" class="sr-only">Write a message</label>
+        <textarea
+          id="input"
+          class="composer__input"
+          placeholder="Write a message…  (Enter to send, Shift+Enter for newline)"
+          rows="1"
+          aria-describedby="hint"></textarea>
+        <button type="submit" class="btn" id="send" disabled>Send</button>
+      </form>
+      <p class="hint" id="hint">Enter to send · Shift+Enter for a new line</p>
+    </div>
   </main>
 
 <script>
 "use strict";
 /* ======================================================================
-   REIS Messaging Module — v1 (must-have core)
+   REIS Messaging Module — v1
    Single-file, zero-dependency. Layered IIFE: Store · Model · Render · Controller.
    Security note: user content is rendered with textContent ONLY (see Render).
    ====================================================================== */
@@ -249,16 +327,14 @@
 
   /* --------------------------------------------------------------------
      Store — the ONLY code that touches persistence.
-     Swap localStorage for a backend later by reimplementing these three
-     functions against the same (sync) interface.
+     parse() is shared by load() and importJSON() so on-disk and imported
+     data go through the exact same validation.
   -------------------------------------------------------------------- */
   const Store = (() => {
     const KEY = "reis.messages.v1";
     const SCHEMA_VERSION = 1;
 
-    function emptyState() {
-      return { schemaVersion: SCHEMA_VERSION, messages: [] };
-    }
+    const emptyState = () => ({ schemaVersion: SCHEMA_VERSION, messages: [] });
 
     function isValidMessage(m) {
       return m && typeof m.id === "string"
@@ -267,42 +343,52 @@
         && typeof m.createdAt === "number";
     }
 
+    // Coerce an arbitrary parsed object into a clean, valid state.
+    function coerce(parsed) {
+      const messages = Array.isArray(parsed?.messages)
+        ? parsed.messages.filter(isValidMessage).map((m) => ({
+            id: m.id,
+            author: m.author,
+            body: m.body,
+            createdAt: m.createdAt,
+            editedAt: typeof m.editedAt === "number" ? m.editedAt : null,
+            replyTo: typeof m.replyTo === "string" ? m.replyTo : null,
+          }))
+        : [];
+      return { schemaVersion: SCHEMA_VERSION, messages };
+    }
+
+    // parse text -> { state, warning?, error? }. Never throws.
+    function parse(raw) {
+      try {
+        return { state: coerce(JSON.parse(raw)) };
+      } catch {
+        return { state: emptyState(), error: "Data was unreadable and could not be parsed." };
+      }
+    }
+
     function load() {
       let raw;
-      try {
-        raw = localStorage.getItem(KEY);
-      } catch {
-        // Storage unavailable (private mode / disabled). Run in-memory.
-        return { state: emptyState(), warning: "Storage unavailable — messages won't persist." };
-      }
-      if (!raw) return { state: emptyState(), warning: null };
-
-      try {
-        const parsed = JSON.parse(raw);
-        const messages = Array.isArray(parsed?.messages)
-          ? parsed.messages.filter(isValidMessage)
-          : [];
-        return { state: { schemaVersion: SCHEMA_VERSION, messages }, warning: null };
-      } catch {
-        // Corrupt data: never silently wipe. Start clean but warn loudly.
-        return { state: emptyState(), warning: "Saved messages were unreadable and could not be loaded." };
-      }
+      try { raw = localStorage.getItem(KEY); }
+      catch { return { state: emptyState(), warning: "Storage unavailable — messages won't persist." }; }
+      if (!raw) return { state: emptyState() };
+      const res = parse(raw);
+      if (res.error) return { state: emptyState(), warning: "Saved messages were unreadable and could not be loaded." };
+      return { state: res.state };
     }
 
     function save(state) {
-      try {
-        localStorage.setItem(KEY, JSON.stringify(state));
-        return { ok: true };
-      } catch {
-        return { ok: false, error: "Could not save — storage is full or unavailable." };
-      }
+      try { localStorage.setItem(KEY, JSON.stringify(state)); return { ok: true }; }
+      catch { return { ok: false, error: "Could not save — storage is full or unavailable." }; }
     }
 
-    return { load, save, emptyState };
+    function importJSON(text) { return parse(text); }
+
+    return { load, save, importJSON, emptyState, SCHEMA_VERSION };
   })();
 
   /* --------------------------------------------------------------------
-     Model — pure functions. No DOM, no storage. Easy to test in isolation.
+     Model — pure functions. No DOM, no storage.
   -------------------------------------------------------------------- */
   const Model = (() => {
     const MAX_LEN = 4000;
@@ -314,18 +400,30 @@
       return { ok: true, body };
     }
 
-    function createMessage(body, author) {
+    function createMessage(body, author, replyTo) {
       return {
-        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())),
+        id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)),
         author: author || "You",
         body,
         createdAt: Date.now(),
         editedAt: null,
-        replyTo: null,
+        replyTo: replyTo || null,
       };
     }
 
-    return { validateBody, createMessage, MAX_LEN };
+    // Pure transforms return NEW arrays (no in-place mutation of caller state).
+    function editMessage(messages, id, newBody) {
+      return messages.map((m) => m.id === id ? { ...m, body: newBody, editedAt: Date.now() } : m);
+    }
+    function deleteMessage(messages, id) {
+      // Remove the message; surviving replies to it are re-pointed to null.
+      return messages
+        .filter((m) => m.id !== id)
+        .map((m) => m.replyTo === id ? { ...m, replyTo: null } : m);
+    }
+    const findById = (messages, id) => messages.find((m) => m.id === id) || null;
+
+    return { validateBody, createMessage, editMessage, deleteMessage, findById, MAX_LEN };
   })();
 
   /* --------------------------------------------------------------------
@@ -338,8 +436,7 @@
     const statusEl = document.getElementById("status");
 
     function relativeTime(ts) {
-      const diff = Date.now() - ts;
-      const s = Math.floor(diff / 1000);
+      const s = Math.floor((Date.now() - ts) / 1000);
       if (s < 5) return "just now";
       if (s < 60) return s + "s ago";
       const m = Math.floor(s / 60);
@@ -351,36 +448,97 @@
       return new Date(ts).toLocaleDateString();
     }
 
-    function renderMessage(m) {
+    const truncate = (t, n) => t.length > n ? t.slice(0, n - 1) + "…" : t;
+
+    // A small labelled action button (Reply / Edit / Delete).
+    function actionBtn(label, action, id, danger) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "msg__action" + (danger ? " msg__action--danger" : "");
+      b.textContent = label;
+      b.dataset.action = action;
+      b.dataset.id = id;
+      return b;
+    }
+
+    function renderReplyRef(parent) {
+      const ref = document.createElement("div");
+      ref.className = "msg__replyref";
+      if (!parent) { ref.textContent = "In reply to a deleted message"; return ref; }
+      const who = document.createElement("b");
+      who.textContent = parent.author;                 // safe
+      ref.append("Replying to ", who, ": " + truncate(parent.body.replace(/\s+/g, " "), 60)); // safe (text node)
+      return ref;
+    }
+
+    // editingId (optional): render this message as an inline edit form.
+    function renderMessage(m, allMessages, editingId) {
       const wrap = document.createElement("article");
       wrap.className = "msg";
       wrap.dataset.id = m.id;
 
+      if (m.replyTo) wrap.append(renderReplyRef(Model.findById(allMessages, m.replyTo)));
+
       const meta = document.createElement("div");
       meta.className = "msg__meta";
-
       const author = document.createElement("span");
       author.className = "msg__author";
-      author.textContent = m.author;            // safe
-
+      author.textContent = m.author;                   // safe
       const time = document.createElement("time");
       time.className = "msg__time";
       time.dateTime = new Date(m.createdAt).toISOString();
       time.textContent = relativeTime(m.createdAt);
       time.title = new Date(m.createdAt).toLocaleString();
-
       meta.append(author, time);
+      if (m.editedAt) {
+        const edited = document.createElement("span");
+        edited.className = "msg__edited";
+        edited.textContent = "· edited";
+        edited.title = "Edited " + new Date(m.editedAt).toLocaleString();
+        meta.append(edited);
+      }
+      wrap.append(meta);
 
-      const body = document.createElement("p");
-      body.className = "msg__body";
-      body.textContent = m.body;                 // safe: never parsed as HTML
+      if (m.id === editingId) {
+        // Inline edit form
+        const form = document.createElement("div");
+        form.className = "edit";
+        const ta = document.createElement("textarea");
+        ta.className = "edit__input";
+        ta.value = m.body;                             // safe (value, not HTML)
+        ta.dataset.editInput = m.id;
+        const actions = document.createElement("div");
+        actions.className = "edit__actions";
+        const save = document.createElement("button");
+        save.type = "button"; save.className = "btn btn--ghost";
+        save.textContent = "Save"; save.dataset.action = "edit-save"; save.dataset.id = m.id;
+        const cancel = document.createElement("button");
+        cancel.type = "button"; cancel.className = "btn btn--ghost";
+        cancel.textContent = "Cancel"; cancel.dataset.action = "edit-cancel"; cancel.dataset.id = m.id;
+        actions.append(save, cancel);
+        form.append(ta, actions);
+        wrap.append(form);
+      } else {
+        const body = document.createElement("p");
+        body.className = "msg__body";
+        body.textContent = m.body;                     // safe: never parsed as HTML
+        wrap.append(body);
 
-      wrap.append(meta, body);
+        const actions = document.createElement("div");
+        actions.className = "msg__actions";
+        actions.append(
+          actionBtn("Reply", "reply", m.id, false),
+          actionBtn("Edit", "edit", m.id, false),
+          actionBtn("Delete", "delete", m.id, true),
+        );
+        wrap.append(actions);
+      }
       return wrap;
     }
 
-    function renderLog(messages) {
-      logEl.replaceChildren();                   // full re-render: no state/DOM desync
+    function renderLog(messages, editingId) {
+      const atBottom = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 40;
+      logEl.replaceChildren();                         // full re-render: no state/DOM desync
       if (!messages.length) {
         const empty = document.createElement("p");
         empty.className = "empty";
@@ -389,9 +547,20 @@
         return;
       }
       const frag = document.createDocumentFragment();
-      for (const m of messages) frag.append(renderMessage(m));
+      for (const m of messages) frag.append(renderMessage(m, messages, editingId));
       logEl.append(frag);
-      logEl.scrollTop = logEl.scrollHeight;      // keep newest in view
+      if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function renderReplyingBanner(parent) {
+      const bar = document.getElementById("replying");
+      const label = document.getElementById("replyingLabel");
+      if (!parent) { bar.hidden = true; label.textContent = ""; return; }
+      label.replaceChildren("Replying to ");
+      const who = document.createElement("b");
+      who.textContent = parent.author;                 // safe
+      label.append(who);
+      bar.hidden = false;
     }
 
     function setStatus(text, tone) {
@@ -401,7 +570,7 @@
       statusEl.dataset.tone = tone || "info";
     }
 
-    return { renderLog, setStatus };
+    return { renderLog, renderReplyingBanner, setStatus };
   })();
 
   /* --------------------------------------------------------------------
@@ -411,8 +580,20 @@
     const form = document.getElementById("composer");
     const input = document.getElementById("input");
     const sendBtn = document.getElementById("send");
+    const logEl = document.getElementById("log");
+    const exportBtn = document.getElementById("export");
+    const importBtn = document.getElementById("import");
+    const importFile = document.getElementById("importFile");
+    const replyingCancel = document.getElementById("replyingCancel");
 
     let state = Store.emptyState();
+    let replyingTo = null;   // id of message being replied to
+    let editingId = null;    // id of message being edited inline
+
+    function rerender() {
+      Render.renderLog(state.messages, editingId);
+      Render.renderReplyingBanner(replyingTo ? Model.findById(state.messages, replyingTo) : null);
+    }
 
     function persist() {
       const res = Store.save(state);
@@ -423,47 +604,109 @@
       input.style.height = "auto";
       input.style.height = Math.min(input.scrollHeight, 160) + "px";
     }
-
-    function refreshSendState() {
-      sendBtn.disabled = input.value.trim().length === 0;
-    }
+    const refreshSendState = () => { sendBtn.disabled = input.value.trim().length === 0; };
 
     function handleSend() {
       const check = Model.validateBody(input.value);
       if (!check.ok) {
-        if (check.reason === "too-long") {
+        if (check.reason === "too-long")
           Render.setStatus("Message is too long (max " + Model.MAX_LEN + " characters).", "error");
-        }
         return;
       }
-      state.messages.push(Model.createMessage(check.body));
+      state.messages.push(Model.createMessage(check.body, "You", replyingTo));
+      replyingTo = null;
       persist();
-      Render.renderLog(state.messages);
       Render.setStatus(null);
-
-      input.value = "";
-      autosize();
-      refreshSendState();
-      input.focus();                             // keep focus for rapid typing
+      input.value = ""; autosize(); refreshSendState();
+      rerender();
+      input.focus();
     }
 
     function handleKeydown(e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSend();
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    }
+
+    // Event delegation for per-message actions.
+    function handleLogClick(e) {
+      const btn = e.target.closest("[data-action]");
+      if (!btn) return;
+      const { action, id } = btn.dataset;
+
+      if (action === "reply") {
+        replyingTo = id; editingId = null; rerender(); input.focus();
+      } else if (action === "edit") {
+        editingId = id; replyingTo = replyingTo === id ? null : replyingTo; rerender();
+        const ta = logEl.querySelector('[data-edit-input="' + CSS.escape(id) + '"]');
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      } else if (action === "edit-cancel") {
+        editingId = null; rerender();
+      } else if (action === "edit-save") {
+        const ta = logEl.querySelector('[data-edit-input="' + CSS.escape(id) + '"]');
+        const check = Model.validateBody(ta ? ta.value : "");
+        if (!check.ok) {
+          Render.setStatus(check.reason === "too-long"
+            ? "Message is too long (max " + Model.MAX_LEN + " characters)."
+            : "Message can't be empty.", "error");
+          return;
+        }
+        state.messages = Model.editMessage(state.messages, id, check.body);
+        editingId = null; persist(); Render.setStatus(null); rerender();
+      } else if (action === "delete") {
+        if (!confirm("Delete this message? This can't be undone.")) return;
+        state.messages = Model.deleteMessage(state.messages, id);
+        if (replyingTo === id) replyingTo = null;
+        if (editingId === id) editingId = null;
+        persist(); rerender();
       }
+    }
+
+    function handleExport() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reis-messages-" + new Date().toISOString().slice(0, 10) + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleImport(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const res = Store.importJSON(String(reader.result));
+        if (res.error) { Render.setStatus("Import failed: " + res.error, "error"); return; }
+        const count = res.state.messages.length;
+        if (!confirm("Import " + count + " message" + (count === 1 ? "" : "s") +
+            "? This replaces your current messages.")) return;
+        state = res.state;
+        replyingTo = null; editingId = null;
+        persist();
+        Render.setStatus("Imported " + count + " message" + (count === 1 ? "" : "s") + ".", "info");
+        rerender();
+      };
+      reader.onerror = () => Render.setStatus("Could not read the selected file.", "error");
+      reader.readAsText(file);
     }
 
     function init() {
       const loaded = Store.load();
       state = loaded.state;
       if (loaded.warning) Render.setStatus(loaded.warning, "error");
-
-      Render.renderLog(state.messages);
+      rerender();
 
       form.addEventListener("submit", (e) => { e.preventDefault(); handleSend(); });
       input.addEventListener("keydown", handleKeydown);
       input.addEventListener("input", () => { autosize(); refreshSendState(); });
+      logEl.addEventListener("click", handleLogClick);
+      replyingCancel.addEventListener("click", () => { replyingTo = null; rerender(); input.focus(); });
+
+      exportBtn.addEventListener("click", handleExport);
+      importBtn.addEventListener("click", () => importFile.click());
+      importFile.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) handleImport(file);
+        importFile.value = "";   // allow re-importing the same file
+      });
 
       refreshSendState();
       input.focus();
